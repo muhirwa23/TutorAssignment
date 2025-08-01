@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Toggle Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toggle-btn {
+      background: #555;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    nav {
+      background: #222;
+      color: white;
+      padding: 10px;
+      display: none;
+    }
+
+    nav a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      margin: 10px 0;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>My Web App</h1>
+    <button class="toggle-btn" onclick="toggleMenu()">☰ Menu</button>
+  </header>
+
+  <nav id="navMenu">
+    <a href="#" onclick="showSection('home')">🏠 Home</a>
+    <a href="#" onclick="showSection('about')">ℹ️ About</a>
+    <a href="#" onclick="showSection('contact')">📞 Contact</a>
+  </nav>
+
+  <main>
+    <div id="home" class="section active">
+      <h2>Welcome Home</h2>
+      <p>This is the home page of your simple web app.</p>
+    </div>
+
+    <div id="about" class="section">
+      <h2>About Us</h2>
+      <p>This is a basic project navigator built with HTML, CSS, and JS.</p>
+    </div>
+
+    <div id="contact" class="section">
+      <h2>Contact</h2>
+      <p>Email us at: example@example.com</p>
+    </div>
+  </main>
+
+  <script>
+    function toggleMenu() {
+      const nav = document.getElementById('navMenu');
+      nav.style.display = nav.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function showSection(id) {
+      const sections = document.querySelectorAll('.section');
+      sections.forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      // Optionally close the nav on mobile
+      document.getElementById('navMenu').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>

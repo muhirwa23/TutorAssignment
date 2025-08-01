@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Sales Commission Updater</title>
+  </head>
+  <body>
+    <!-- Checkbox for user to indicate whether the employee met their sales target -->
+    <label for="target-check">Has the sales target been met? </label>
+    <input type="checkbox" id="target-check">
+
+    <!-- Placeholder paragraph where commission info will be displayed -->
+    <p></p>
+
+    <script>
+      // Select the first <input> element (our checkbox) and store it in a variable
+      const checkBox = document.querySelector('input');
+
+      // Select the <p> element for outputting the message to the user
+      const para = document.querySelector('p');
+
+      // Initialize a boolean variable to keep track of whether the sales target was met
+      let salesTargetMet = false;
+
+      // Add an event listener that triggers when the checkbox is changed (checked or unchecked)
+      checkBox.addEventListener('change', () => {
+        // Disable the checkbox after it's changed to prevent toggling multiple times
+        checkBox.disabled = true;
+
+        // Update the internal state to indicate that the target has been met
+        salesTargetMet = true;
+
+        // Call the function to calculate and display the commission
+        updateCommission();
+      });
+
+      // Function that calculates commission based on whether sales target was met
+      function updateCommission() {
+        // Variable to store the commission value
+        let employeeCommission;
+
+        // If the target was met, give a higher bonus
+        if (salesTargetMet === true) {
+          employeeCommission = 500;  // full bonus
+        } else {
+          employeeCommission = 100;  // base bonus
+        }
+
+        // Update the content of the <p> element to display the commission
+        para.textContent = `Employee has earned \$${employeeCommission} commission this week.`;
+      }
+
+      // Run this once on page load to show the default state (e.g., no bonus if unchecked)
+      updateCommission();
+    </script>
+  </body>
+</html>

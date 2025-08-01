@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functions Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Functions: Regular vs Arrow</h1>
+    
+    <button onclick="testRegularFunction()">Test Regular Function</button>
+    <button onclick="testArrowFunction()">Test Arrow Function</button>
+    <button onclick="testCalculations()">Test Calculations</button>
+    
+    <div id="results"></div>
+
+    <script>
+        // Regular function for displaying results
+        function displayResult(message) {
+            // Get the results div element
+            const resultsDiv = document.getElementById('results');
+            // Create a new div for this result
+            const newResult = document.createElement('div');
+            // Add CSS class for styling
+            newResult.className = 'result';
+            // Set the text content
+            newResult.textContent = message;
+            // Add it to the results div
+            resultsDiv.appendChild(newResult);
+        }
+
+        // Regular function example
+        function testRegularFunction() {
+            // This function can be called anywhere in the code
+            function calculateArea(width, height) {
+                // Multiply width by height
+                return width * height;
+            }
+            
+            // Call the function and store result
+            let area = calculateArea(5, 3);
+            displayResult(`Regular Function: Area = ${area}`);
+        }
+
+        // Arrow function example
+        const testArrowFunction = () => {
+            // Arrow function for calculation
+            const calculateVolume = (length, width, height) => {
+                // All parameters multiplied together
+                return length * width * height;
+            };
+            
+            // Call the arrow function
+            let volume = calculateVolume(2, 3, 4);
+            displayResult(`Arrow Function: Volume = ${volume}`);
+        };
+
+        // Mixed example with different arrow function styles
+        const testCalculations = () => {
+            // Single parameter, no parentheses needed
+            const square = x => x * x;
+            
+            // Multiple parameters, parentheses required
+            const add = (a, b) => a + b;
+            
+            // Complex function with multiple lines
+            const getCircleInfo = radius => {
+                const area = Math.PI * radius * radius;
+                const circumference = 2 * Math.PI * radius;
+                return {
+                    area: area.toFixed(2),
+                    circumference: circumference.toFixed(2)
+                };
+            };
+            
+            // Test all functions
+            displayResult(`Square of 5: ${square(5)}`);
+            displayResult(`Add 3 + 7: ${add(3, 7)}`);
+            
+            const circleInfo = getCircleInfo(3);
+            displayResult(`Circle (radius 3): Area = ${circleInfo.area}, Circumference = ${circleInfo.circumference}`);
+        };
+    </script>
+</body>
+</html>

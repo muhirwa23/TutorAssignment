@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> <!-- Character encoding -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobile responsiveness -->
+    <title>Theme Switcher</title>
+</head>
+<body>
+    <!-- Dropdown to select the theme -->
+    <label for="theme">Select theme:</label>
+    <select id="theme">
+        <option value="light">Light</option> <!-- Light theme option -->
+        <option value="dark">Dark</option>   <!-- Dark theme option -->
+    </select>
+
+    <script>
+        // Get the dropdown element
+        const select = document.querySelector("select");
+
+        // Get the root HTML element (we'll change background and text color here)
+        const html = document.querySelector("html");
+
+        // Add some space inside the body for better display
+        document.body.style.padding = '10px';
+
+        // This function updates the background and text colors
+        function update(bgPageColor, textColor) {
+            html.style.backgroundColor = bgPageColor;
+            html.style.color = textColor;
+        }
+
+        // When the user changes the dropdown selection, run this function
+        select.addEventListener("change", () => {
+            // If selected theme is 'dark', set background black and text white
+            // Otherwise (light theme), set background white and text black
+            select.value === "dark"
+                ? update("black", "white")
+                : update("white", "black");
+        });
+    </script>
+</body>
+</html>

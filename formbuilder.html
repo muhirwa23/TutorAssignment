@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dynamic Form Builder</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    form {
+      margin-top: 20px;
+    }
+    .form-field {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dynamic Form Builder</h1>
+
+  <!-- Dropdown to choose input type -->
+  <label for="inputType">Choose input type:</label>
+  <select id="inputType">
+    <option value="text">Text</option>
+    <option value="email">Email</option>
+    <option value="password">Password</option>
+    <option value="number">Number</option>
+    <option value="date">Date</option>
+  </select>
+
+  <!-- Button to add input to the form -->
+  <button id="addFieldBtn">Add Field</button>
+
+  <!-- Form where inputs will be added -->
+  <form id="dynamicForm">
+    <h3>Generated Form:</h3>
+  </form>
+
+  <script>
+    const inputTypeSelector = document.getElementById("inputType");
+    const addFieldBtn = document.getElementById("addFieldBtn");
+    const form = document.getElementById("dynamicForm");
+
+    let fieldCount = 1; // To create unique names/IDs
+
+    // When the Add Field button is clicked
+    addFieldBtn.addEventListener("click", (e) => {
+      e.preventDefault(); // Prevent form from submitting
+
+      const type = inputTypeSelector.value;
+
+      // Create a container for each field
+      const fieldDiv = document.createElement("div");
+      fieldDiv.classList.add("form-field");
+
+      // Create a label
+      const label = document.createElement("label");
+      label.textContent = `Field ${fieldCount} (${type}): `;
+      label.setAttribute("for", `field${fieldCount}`);
+
+      // Create the input element
+      const input = document.createElement("input");
+      input.type = type;
+      input.name = `field${fieldCount}`;
+      input.id = `field${fieldCount}`;
+
+      // Add label and input to the container
+      fieldDiv.appendChild(label);
+      fieldDiv.appendChild(input);
+
+      // Add the field to the form
+      form.appendChild(fieldDiv);
+
+      fieldCount++; // Increment for next field
+    });
+  </script>
+</body>
+</html>

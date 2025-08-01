@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Advanced Dynamic Form Builder</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 700px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #controls {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 8px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #dynamicForm {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f9f9f9;
+      min-height: 150px;
+    }
+    .form-field {
+      border: 1px solid #ddd;
+      background: white;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      cursor: grab;
+    }
+    .form-field.dragging {
+      opacity: 0.5;
+    }
+    .form-field label,
+    .form-field input[type="text"],
+    .form-field select {
+      flex-grow: 1;
+      min-width: 120px;
+    }
+    .form-field input[type="text"] {
+      padding: 5px;
+    }
+    .remove-btn {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .required-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    #submitBtn, #exportJsonBtn, #exportHtmlBtn, #previewToggleBtn {
+      margin-top: 15px;
+    }
+    #result {
+      white-space: pre-wrap;
+      background: #eef2f7;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 6px;
+      min-height: 100px;
+      font-family: monospace;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Advanced Dynamic Form Builder</h1>
+
+  <div id="controls">
+    <button id="addFieldBtn">Add New Question</button>
+    <button id="previewToggleBtn">Preview Mode: OFF</button>
+    <button id="submitBtn" style="display:none;">Submit Form</button>
+    <button id="exportJsonBtn" style="display:none;">Export JSON</button>
+    <button id="exportHtmlBtn" style="display:none;">Export HTML</button>
+  </div>
+
+  <form id="dynamicForm" autocomplete="off">
+    <h3>Form Preview:</h3>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const addFieldBtn = document.getElementById("addFieldBtn");
+    const form = document.getElementById("dynamicForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const result = document.getElementById("result");
+    const previewToggleBtn = document.getElementById("previewToggleBtn");
+    const exportJsonBtn = document.getElementById("exportJsonBtn");
+    const exportHtmlBtn = document.getElementById("exportHtmlBtn");
+
+    let fieldCount = 0;
+    let isPreviewMode = false;
+
+    // ======= DRAG & DROP VARIABLES =======
+    let draggedElem = null;
+
+    // Create new question block
+    function createField(id) {
+      const fieldDiv = document.createElement("div");
+      fieldDiv.classList.add("form-field");
+      fieldDiv.dataset.id = id;
+      fieldDiv.setAttribute("draggable", true);
+
+      // Question label input
+      const labelInput = document.createElement("input");
+      labelInput.type = "text";
+      labelInput.value = `Question ${id + 1}`;
+      labelInput.placeholder = "Enter your question here";
+      labelInput.required = true;
+
+      // Input type selector
+      const typeSelect = document.createElement("select");
+      ["text", "email", "password", "number", "date"].forEach(type => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+        typeSelect.appendChild(option);
+      });
+
+      // Answer input (actual input user fills in)
+      const answerInput = document.createElement("input");
+      answerInput.type = "text"; // default
+      answerInput.name = `field${id}`;
+      answerInput.placeholder = "Answer here";
+
+      // Required toggle checkbox
+      const requiredToggle = document.createElement("label");
+      requiredToggle.classList.add("required-toggle");
+      const reqCheckbox = document.createElement("input");
+      reqCheckbox.type = "checkbox";
+      reqCheckbox.checked = false;
+      const reqText = document.createTextNode("Required");
+
+      requiredToggle.appendChild(reqCheckbox);
+      requiredToggle.appendChild(reqText);
+
+      // Remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "Remove";
+      removeBtn.type = "button";
+      removeBtn.classList.add("remove-btn");
+
+      // Event: Remove field
+      removeBtn.addEventListener("click", () => {
+        fieldDiv.remove();
+        checkSubmitExportButtons();
+      });
+
+      // Event: Change answer input type when type selector changes
+      typeSelect.addEventListener("change", () => {
+        answerInput.type = typeSelect.value;
+      });
+
+      // Event: Toggle required attribute
+      reqCheckbox.addEventListener("change", () => {
+        if (reqCheckbox.checked) {
+          answerInput.required = true;
+          labelInput.required = true;
+        } else {
+          answerInput.required = false;
+          labelInput.required = false;
+        }
+      });
+
+      // Arrange elements inside fieldDiv
+      fieldDiv.appendChild(labelInput);
+      fieldDiv.appendChild(typeSelect);
+      fieldDiv.appendChild(answerInput);
+      fieldDiv.appendChild(requiredToggle);
+      fieldDiv.appendChild(removeBtn);
+
+      // Setup drag events for reorder
+      fieldDiv.addEventListener("dragstart", dragStart);
+      fieldDiv.addEventListener("dragover", dragOver);
+      fieldDiv.addEventListener("drop", drop);
+      fieldDiv.addEventListener("dragend", dragEnd);
+
+      return fieldDiv;
+    }
+
+    // Add new field handler
+    addFieldBtn.addEventListener("click", () => {
+      if (isPreviewMode) return; // disable editing in preview mode
+      const newField = createField(fieldCount);
+      form.appendChild(newField);
+      fieldCount++;
+      checkSubmitExportButtons();
+    });
+
+    // Show/hide submit & export buttons depending on number of fields
+    function checkSubmitExportButtons() {
+      const count = form.querySelectorAll(".form-field").length;
+      const displayStyle = count > 0 ? "inline-block" : "none";
+      submitBtn.style.display = displayStyle;
+      exportJsonBtn.style.display = displayStyle;
+      exportHtmlBtn.style.display = displayStyle;
+    }
+
+    // ======= DRAG & DROP HANDLERS =======
+    function dragStart(e) {
+      if (isPreviewMode) {
+        e.preventDefault();
+        return;
+      }
+      draggedElem = this;
+      this.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    }
+
+    function dragOver(e) {
+      e.preventDefault();
+      if (isPreviewMode) return;
+
+      const target = e.currentTarget;
+      if (target === draggedElem) return;
+
+      // Get bounding rect of the hovered element
+      const rect = target.getBoundingClientRect();
+      const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+
+      if (next) {
+        target.after(draggedElem);
+      } else {
+        target.before(draggedElem);
+      }
+    }
+
+    function drop(e) {
+      e.preventDefault();
+      if (isPreviewMode) return;
+      // Nothing needed here because we already moved elements in dragOver
+    }
+
+    function dragEnd() {
+      this.classList.remove("dragging");
+      draggedElem = null;
+    }
+
+    // ======= PREVIEW MODE =======
+    previewToggleBtn.addEventListener("click", () => {
+      isPreviewMode = !isPreviewMode;
+      if (isPreviewMode) {
+        enterPreviewMode();
+        previewToggleBtn.textContent = "Preview Mode: ON";
+        addFieldBtn.disabled = true;
+        submitBtn.style.display = "inline-block";
+        exportJsonBtn.style.display = "none";
+        exportHtmlBtn.style.display = "none";
+      } else {
+        exitPreviewMode();
+        previewToggleBtn.textContent = "Preview Mode: OFF";
+        addFieldBtn.disabled = false;
+        checkSubmitExportButtons();
+      }
+      result.textContent = "";
+    });
+
+    // Disable editing inputs, hide editing controls in preview
+    function enterPreviewMode() {
+      form.querySelectorAll(".form-field").forEach(field => {
+        // Disable drag & drop
+        field.setAttribute("draggable", false);
+        // Hide label input and type selector, remove button, required toggle
+        const inputs = field.querySelectorAll("input, select, button");
+        inputs.forEach(el => {
+          if (el.classList.contains("remove-btn")) {
+            el.style.display = "none";
+          } else if (el.tagName === "SELECT" || el.type === "text" && el !== field.querySelector("input[name^='field']")) {
+            el.style.display = "none";
+          } else {
+            el.disabled = false; // enable the answer input
+          }
+        });
+      });
+    }
+
+    // Restore editing UI
+    function exitPreviewMode() {
+      form.querySelectorAll(".form-field").forEach(field => {
+        field.setAttribute("draggable", true);
+        const inputs = field.querySelectorAll("input, select, button");
+        inputs.forEach(el => {
+          el.style.display = "";
+          el.disabled = false;
+        });
+      });
+    }
+
+    // ======= FORM SUBMISSION =======
+    submitBtn.addEventListener("click", e => {
+      e.preventDefault();
+      if (isPreviewMode) {
+        const data = getFormData();
+        result.textContent = JSON.stringify(data, null, 2);
+      }
+    });
+
+    // Get current form data in array of objects {question, answer, type, required}
+    function getFormData() {
+      const fields = form.querySelectorAll(".form-field");
+      const data = [];
+      fields.forEach(field => {
+        const question = field.querySelector("input[type='text']").value.trim();
+        const type = field.querySelector("select").value;
+        const answerInput = field.querySelector("input[name^='field']");
+        const answer = answerInput ? answerInput.value : "";
+        const required = field.querySelector("input[type='checkbox']").checked;
+        data.push({ question, answer, type, required });
+      });
+      return data;
+    }
+
+    // ======= EXPORT JSON =======
+    exportJsonBtn.addEventListener("click", () => {
+      const data = getFormData();
+      const jsonStr = JSON.stringify(data, null, 2);
+      downloadFile(jsonStr, "form-data.json", "application/json");
+    });
+
+    // ======= EXPORT HTML =======
+    exportHtmlBtn.addEventListener("click", () => {
+      const data = getFormData();
+      const htmlStr = generateFormHTML(data);
+      downloadFile(htmlStr, "form.html", "text/html");
+    });
+
+    // Utility: Download string as a file
+    function downloadFile(content, filename, type) {
+      const a = document.createElement("a");
+      const file = new Blob([content], { type });
+      a.href = URL.createObjectURL(file);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Generate HTML string for a basic form
+    function generateFormHTML(data) {
+      let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Exported Form</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: 30px auto; padding: 10px; }
+  label { display: block; margin: 15px 0 5px; }
+  input { width: 100%; padding: 8px; box-sizing: border-box; }
+  button { margin-top: 20px; padding: 10px 20px; font-size: 1rem; }
+</style>
+</head>
+<body>
+<form id="exportedForm" autocomplete="off">
+`;
+
+      data.forEach((field, idx) => {
+        const requiredAttr = field.required ? "required" : "";
+        const label = field.question ? field.question : `Question ${idx + 1}`;
+        html += `<label for="field${idx}">${label}${field.required ? " *" : ""}</label>\n`;
+        html += `<input type="${field.type}" id="field${idx}" name="field${idx}" placeholder="Answer here" ${requiredAttr} />\n`;
+      });
+
+      html += `<button type="submit">Submit</button>\n</form>\n</body>\n</html>`;
+
+      return html;
+    }
+
+    // Initialize
+    checkSubmitExportButtons();
+  </script>
+</body>
+</html>

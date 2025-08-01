@@ -1,0 +1,68 @@
+<!DOCTYPE html> <!-- This tells the browser to use the latest HTML version -->
+<html lang="en"> <!-- The document is written in English -->
+<head>
+    <meta charset="UTF-8"> <!-- Supports most characters (like é, ñ, etc.) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Makes the page responsive on all devices -->
+    <title>Document</title> <!-- Title of the tab/window -->
+</head>
+<body>
+    <!-- Label linked to the dropdown menu -->
+    <label for="weather">Select the weather type today: </label>
+    
+    <!-- Dropdown list for selecting the weather -->
+    <select id="weather">
+        <option value="">--Make a choice--</option> <!-- Default option with no value -->
+        <option value="sunny">Sunny</option>
+        <option value="rainy">Rainy</option>
+        <option value="snowing">Snowing</option>
+        <option value="overcast">Overcast</option>
+    </select>
+
+    <!-- Paragraph that will show the message based on weather selection -->
+    <p></p>
+
+    <script>
+        // Select the dropdown menu and store it in a variable
+        const select = document.querySelector("select");
+
+        // Select the paragraph element where we will display the message
+        const para = document.querySelector("p");
+
+        // When the user changes the selection, run the setWeather function
+        select.addEventListener("change", setWeather);
+
+        // This function checks the selected weather and updates the message
+        function setWeather() {
+            // Get the selected value (like "sunny", "rainy", etc.)
+            const choice = select.value;
+
+            // Use a switch statement to decide which message to show
+            switch (choice) {
+                case "sunny":
+                    // If the user chose "sunny", show this message
+                    para.textContent =
+                        "It is nice and sunny outside today. Wear shorts! Go to the beach, or the park, and get an ice cream.";
+                    break;
+                case "rainy":
+                    // Message for rainy weather
+                    para.textContent =
+                        "Rain is falling outside; take a rain coat and an umbrella, and don't stay out for too long.";
+                    break;
+                case "snowing":
+                    // Message for snowing weather
+                    para.textContent =
+                        "The snow is coming down — it is freezing! Best to stay in with a cup of hot chocolate, or go build a snowman.";
+                    break;
+                case "overcast":
+                    // Message for overcast (cloudy) weather
+                    para.textContent =
+                        "It isn't raining, but the sky is grey and gloomy; it could turn any minute, so take a rain coat just in case.";
+                    break;
+                default:
+                    // If no valid option is selected, clear the message
+                    para.textContent = "";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Editable Dynamic Form Builder</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .form-field {
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      position: relative;
+      background: #f9f9f9;
+    }
+    .form-field label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-field input[type="text"] {
+      width: 70%;
+      padding: 5px;
+      margin-right: 10px;
+    }
+    .form-field select {
+      padding: 5px;
+      margin-right: 10px;
+    }
+    .remove-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4d4d;
+      border: none;
+      color: white;
+      padding: 5px 8px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    #submitBtn {
+      padding: 10px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    #result {
+      margin-top: 25px;
+      background: #eef2f7;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Editable Dynamic Form Builder</h1>
+
+  <button id="addFieldBtn">Add New Question</button>
+
+  <form id="dynamicForm">
+    <h3>Form Preview:</h3>
+  </form>
+
+  <button id="submitBtn" style="display:none;">Submit Form</button>
+
+  <div id="result"></div>
+
+  <script>
+    const addFieldBtn = document.getElementById("addFieldBtn");
+    const form = document.getElementById("dynamicForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const result = document.getElementById("result");
+
+    let fieldCount = 0;
+
+    // Helper to create a new question block
+    function createField(id) {
+      const fieldDiv = document.createElement("div");
+      fieldDiv.classList.add("form-field");
+      fieldDiv.dataset.id = id;
+
+      // Editable label input (question text)
+      const labelInput = document.createElement("input");
+      labelInput.type = "text";
+      labelInput.value = `Question ${id + 1}`;
+      labelInput.placeholder = "Enter your question here";
+
+      // Input type selector
+      const typeSelect = document.createElement("select");
+      ["text", "email", "password", "number", "date"].forEach(type => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+        typeSelect.appendChild(option);
+      });
+
+      // Actual input field to fill in by user
+      const answerInput = document.createElement("input");
+      answerInput.type = "text"; // default type
+      answerInput.name = `field${id}`;
+      answerInput.placeholder = "Answer here";
+
+      // When question type changes, update answer input type
+      typeSelect.addEventListener("change", () => {
+        answerInput.type = typeSelect.value;
+      });
+
+      // When label changes, update the aria-label for accessibility
+      labelInput.addEventListener("input", () => {
+        answerInput.setAttribute("aria-label", labelInput.value);
+      });
+
+      // Remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "Remove";
+      removeBtn.type = "button";
+      removeBtn.classList.add("remove-btn");
+      removeBtn.addEventListener("click", () => {
+        fieldDiv.remove();
+        checkSubmitButton();
+      });
+
+      // Append elements to field div
+      fieldDiv.appendChild(labelInput);
+      fieldDiv.appendChild(typeSelect);
+      fieldDiv.appendChild(answerInput);
+      fieldDiv.appendChild(removeBtn);
+
+      return fieldDiv;
+    }
+
+    // Add new field button handler
+    addFieldBtn.addEventListener("click", () => {
+      const newField = createField(fieldCount);
+      form.appendChild(newField);
+      fieldCount++;
+      checkSubmitButton();
+    });
+
+    // Show or hide submit button based on form fields count
+    function checkSubmitButton() {
+      if (form.querySelectorAll(".form-field").length > 0) {
+        submitBtn.style.display = "inline-block";
+      } else {
+        submitBtn.style.display = "none";
+      }
+    }
+
+    // Submit form handler: show JSON of all answers with their questions
+    submitBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const fields = form.querySelectorAll(".form-field");
+      const data = [];
+
+      fields.forEach((fieldDiv, index) => {
+        const question = fieldDiv.querySelector("input[type='text']").value.trim();
+        const answer = fieldDiv.querySelector("input[type='text']:not([readonly])").value || "";
+        const type = fieldDiv.querySelector("select").value;
+        data.push({ question, answer, type });
+      });
+
+      result.textContent = JSON.stringify(data, null, 2);
+    });
+  </script>
+</body>
+</html>
